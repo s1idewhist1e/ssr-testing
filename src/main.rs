@@ -2,12 +2,14 @@ use winit::event_loop::EventLoop;
 
 mod app;
 mod camera;
+mod instance;
+mod lighting;
+mod model;
+mod resources;
 mod state;
 mod texture;
 mod vertex;
-mod instance;
-mod model;
-mod resources;
+mod render_pipeline;
 
 use app::*;
 

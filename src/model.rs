@@ -14,6 +14,8 @@ pub struct ModelVertex {
     pub position: [f32; 3],
     pub tex_coords: [f32; 2],
     pub normal: [f32; 3],
+    pub tangent: [f32; 3],
+    pub bitangent: [f32; 3],
 }
 
 impl Vertex for ModelVertex {
@@ -37,6 +39,16 @@ impl Vertex for ModelVertex {
                     offset: size_of::<[f32; 5]>() as wgpu::BufferAddress,
                     shader_location: 2,
                 },
+                wgpu::VertexAttribute {
+                    format: wgpu::VertexFormat::Float32x3,
+                    offset: size_of::<[f32; 3]>() as wgpu::BufferAddress,
+                    shader_location: 3,
+                },
+                wgpu::VertexAttribute {
+                    format: wgpu::VertexFormat::Float32x3,
+                    offset: size_of::<[f32; 3]>() as wgpu::BufferAddress,
+                    shader_location: 4,
+                },
             ],
         };
     }
@@ -49,14 +61,15 @@ pub struct Model {
 
 pub struct Material {
     pub name: String,
-    pub diffuse: [f32; 3],
-    pub ambient: [f32; 3],
-    pub specular: [f32; 3],
-    pub emission: [f32; 3],
-    pub shininess: f32,
-    pub refraction: f32,
-    pub alpha: f32,
+    // pub diffuse: [f32; 3],
+    // pub ambient: [f32; 3],
+    // pub specular: [f32; 3],
+    // pub emission: [f32; 3],
+    // pub shininess: f32,
+    // pub refraction: f32,
+    // pub alpha: f32,
     pub diffuse_texture: Texture,
+    pub normal_texture: Texture,
     // pub specular_texture: Texture,
     pub bind_group: wgpu::BindGroup,
 }
@@ -75,6 +88,7 @@ pub trait DrawModel<'a> {
         mesh: &'a Mesh,
         material: &'a Material,
         camera_bind_group: &'a wgpu::BindGroup,
+        light_bind_group: &'a wgpu::BindGroup,
     );
     fn draw_mesh_instanced(
         &mut self,
@@ -82,11 +96,13 @@ pub trait DrawModel<'a> {
         material: &'a Material,
         instances: Range<u32>,
         camera_bind_group: &'a wgpu::BindGroup,
+        light_bind_group: &'a wgpu::BindGroup,
     );
     fn draw_model(
         &mut self,
         model: &'a Model,
         camera_bind_group: &'a wgpu::BindGroup,
+        light_bind_group: &'a wgpu::BindGroup,
         default_texture: &'a Material,
     );
     fn draw_model_instanced(
@@ -94,6 +110,7 @@ pub trait DrawModel<'a> {
         model: &'a Model,
         instances: Range<u32>,
         camera_bind_group: &'a wgpu::BindGroup,
+        light_bind_group: &'a wgpu::BindGroup,
         default_texture: &'a Material,
     );
 }
@@ -107,8 +124,9 @@ where
         mesh: &'b Mesh,
         material: &'a Material,
         camera_bind_group: &'a wgpu::BindGroup,
+        light_bind_group: &'a wgpu::BindGroup,
     ) {
-        self.draw_mesh_instanced(mesh, material, 0..1, camera_bind_group);
+        self.draw_mesh_instanced(mesh, material, 0..1, camera_bind_group, light_bind_group);
     }
 
     fn draw_mesh_instanced(
@@ -117,11 +135,13 @@ where
         material: &'a Material,
         instances: Range<u32>,
         camera_bind_group: &'a wgpu::BindGroup,
+        light_bind_group: &'a wgpu::BindGroup,
     ) {
         self.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
         self.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
         self.set_bind_group(0, &material.bind_group, &[]);
         self.set_bind_group(1, camera_bind_group, &[]);
+        self.set_bind_group(2, light_bind_group, &[]);
         self.draw_indexed(0..mesh.num_elements, 0, instances);
     }
 
@@ -129,9 +149,16 @@ where
         &mut self,
         model: &'b Model,
         camera_bind_group: &'b wgpu::BindGroup,
+        light_bind_group: &'a wgpu::BindGroup,
         default_material: &'b Material,
     ) {
-        self.draw_model_instanced(model, 0..1, camera_bind_group, default_material);
+        self.draw_model_instanced(
+            model,
+            0..1,
+            camera_bind_group,
+            light_bind_group,
+            default_material,
+        );
     }
 
     fn draw_model_instanced(
@@ -139,6 +166,7 @@ where
         model: &'b Model,
         instances: Range<u32>,
         camera_bind_group: &'b wgpu::BindGroup,
+        light_bind_group: &'a wgpu::BindGroup,
         default_material: &'b Material,
     ) {
         for mesh in &model.meshes {
@@ -147,7 +175,13 @@ where
                 .get(mesh.material)
                 .unwrap_or(&default_material);
 
-            self.draw_mesh_instanced(mesh, material, instances.clone(), camera_bind_group);
+            self.draw_mesh_instanced(
+                mesh,
+                material,
+                instances.clone(),
+                camera_bind_group,
+                light_bind_group,
+            );
         }
     }
 }
