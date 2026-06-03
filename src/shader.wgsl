@@ -96,19 +96,24 @@ var s_depth: sampler_comparison;
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let normal_matrix = mat3x3<f32>(
-        in.tangent,
-        in.bitangent,
-        in.world_normal,
+        normalize(in.tangent),
+        normalize(in.bitangent),
+        normalize(in.world_normal),
     );
     let light_dir = normalize(vec3<f32>(1.0, 1.0, 1.0));
     // let near = 0.1;
     // let far = 100.0;
     // return vec4<f32>(vec3<f32>(textureSampleCompare(t_depth, s_depth, in.tex_coords.xy, 0.0)), 1.0);
 
-    let world_normal = normalize(normal_matrix * textureSample(t_normal, s_normal, in.tex_coords).xyz); // * dot(in.normal, light_dir);
+    //let world_normal = normalize(normal_matrix * textureSample(t_normal, s_normal, in.tex_coords).xyz); // * dot(in.normal, light_dir);
+    let map_normal = textureSample(t_normal, s_normal, in.tex_coords).xyz;
+    //let map_normal = vec3<f32>(0.5,0.5,1.0);
+    let tangent_normal = map_normal * vec3<f32>(2,2,2) - vec3<f32>(1,1,1) ; // This may need to be changed even more?
+    let world_normal = normal_matrix * tangent_normal;
     // let world_normal = in.world_normal;
 
     let light = light.position - in.world_pos.xyz;
+    //let light = light.position;
 
     let half = normalize(light_dir - normalize(in.world_pos.xyz));
 
@@ -137,7 +142,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     // let color = // return vec4<f32>(world_normal, 1.0);
     // return vec4<f32>(in.clip_position.xyw, 1.0);
-    return color_lit;
+    //return color_lit;
+
+    return vec4<f32>(world_normal, 1.0);
     // return c;
 }
 

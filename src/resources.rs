@@ -217,69 +217,69 @@ pub async fn load_model(
             let mut triangles_included = vec![0; vertices.len()];
 
             // Generate tangent and bitangent
-            // for c in indices.chunks(3) {
-            //     let v0 = vertices[c[0] as usize];
-            //     let v1 = vertices[c[1] as usize];
-            //     let v2 = vertices[c[2] as usize];
-            //
-            //     let uv0: cgmath::Vector2<_> = v0.tex_coords.into();
-            //     let uv1: cgmath::Vector2<_> = v1.tex_coords.into();
-            //     let uv2: cgmath::Vector2<_> = v2.tex_coords.into();
-            //
-            //     let pos0: cgmath::Vector3<_> = v0.position.into();
-            //     let pos1: cgmath::Vector3<_> = v1.position.into();
-            //     let pos2: cgmath::Vector3<_> = v2.position.into();
-            //
-            //     let vec1 = pos1 - pos0;
-            //     let vec2 = pos2 - pos0;
-            //     // let vec2 = vec1.cross(cgmath::Vector3::from(v0.normal));
-            //     //let vec2 = pos2 - pos0;
-            //
-            //     let vec_uv1 = uv1 - uv0;
-            //     // let vec_uv2 = Vector2::from((-vec_uv1.y, vec_uv1.x));
-            //     let vec_uv2 = uv2 - uv0;
-            //
-            //     let r = 1.0 / (vec_uv1.x * vec_uv2.y - vec_uv1.y * vec_uv2.x);
-            //     let tangent = (vec1 * vec_uv2.y - vec2 * vec_uv1.y) * r;
-            //     // We flip the bitangent to enable right-handed normal
-            //     // maps with wgpu texture coordinate system
-            //     let bitangent = (vec2 * vec_uv1.x - vec1 * vec_uv2.x) * -r;
-            //
-            //     vertices[c[0] as usize].tangent =
-            //         (tangent + cgmath::Vector3::from(vertices[c[0] as usize].tangent)).into();
-            //     vertices[c[1] as usize].tangent =
-            //         (tangent + cgmath::Vector3::from(vertices[c[1] as usize].tangent)).into();
-            //     vertices[c[2] as usize].tangent =
-            //         (tangent + cgmath::Vector3::from(vertices[c[2] as usize].tangent)).into();
-            //     vertices[c[0] as usize].bitangent =
-            //         (bitangent + cgmath::Vector3::from(vertices[c[0] as usize].bitangent)).into();
-            //     vertices[c[1] as usize].bitangent =
-            //         (bitangent + cgmath::Vector3::from(vertices[c[1] as usize].bitangent)).into();
-            //     vertices[c[2] as usize].bitangent =
-            //         (bitangent + cgmath::Vector3::from(vertices[c[2] as usize].bitangent)).into();
-            //
-            //     triangles_included[c[0] as usize] += 1;
-            //     triangles_included[c[1] as usize] += 1;
-            //     triangles_included[c[2] as usize] += 1;
-            // }
-            //
-            // for (i, n) in triangles_included.into_iter().enumerate() {
-            //     let denom = 1.0 / n as f32;
-            //     let mut v = &mut vertices[i];
-            //     let tangent = cgmath::Vector3::from(v.tangent) * denom;
-            //     let bitangent = cgmath::Vector3::from(v.bitangent) * denom;
-            //     let normal = cgmath::Vector3::from(v.normal);
-            //
-            //     println!(
-            //         "Normal error: \n\t expected: {:?} \n\t got: {:?} \n\t dot product: {:?}",
-            //         normal.normalize(),
-            //         tangent.cross(bitangent).normalize(),
-            //         normal.normalize().dot(tangent.cross(bitangent).normalize())
-            //     );
-            //     v.tangent = tangent.into();
-            //     v.bitangent = bitangent.into();
-            //     // v.normal = tangent.cross(bitangent).normalize().into();
-            // }
+            for c in indices.chunks(3) {
+                let v0 = vertices[c[0] as usize];
+                let v1 = vertices[c[1] as usize];
+                let v2 = vertices[c[2] as usize];
+
+                let uv0: cgmath::Vector2<_> = v0.tex_coords.into();
+                let uv1: cgmath::Vector2<_> = v1.tex_coords.into();
+                let uv2: cgmath::Vector2<_> = v2.tex_coords.into();
+
+                let pos0: cgmath::Vector3<_> = v0.position.into();
+                let pos1: cgmath::Vector3<_> = v1.position.into();
+                let pos2: cgmath::Vector3<_> = v2.position.into();
+
+                let vec1 = pos1 - pos0;
+                let vec2 = pos2 - pos0;
+                // let vec2 = vec1.cross(cgmath::Vector3::from(v0.normal));
+                //let vec2 = pos2 - pos0;
+
+                let vec_uv1 = uv1 - uv0;
+                // let vec_uv2 = Vector2::from((-vec_uv1.y, vec_uv1.x));
+                let vec_uv2 = uv2 - uv0;
+
+                let r = 1.0 / (vec_uv1.x * vec_uv2.y - vec_uv1.y * vec_uv2.x);
+                let tangent = (vec1 * vec_uv2.y - vec2 * vec_uv1.y) * r;
+                // We flip the bitangent to enable right-handed normal
+                // maps with wgpu texture coordinate system
+                let bitangent = (vec2 * vec_uv1.x - vec1 * vec_uv2.x) * -r;
+
+                vertices[c[0] as usize].tangent =
+                    (tangent + cgmath::Vector3::from(vertices[c[0] as usize].tangent)).into();
+                vertices[c[1] as usize].tangent =
+                    (tangent + cgmath::Vector3::from(vertices[c[1] as usize].tangent)).into();
+                vertices[c[2] as usize].tangent =
+                    (tangent + cgmath::Vector3::from(vertices[c[2] as usize].tangent)).into();
+                vertices[c[0] as usize].bitangent =
+                    (bitangent + cgmath::Vector3::from(vertices[c[0] as usize].bitangent)).into();
+                vertices[c[1] as usize].bitangent =
+                    (bitangent + cgmath::Vector3::from(vertices[c[1] as usize].bitangent)).into();
+                vertices[c[2] as usize].bitangent =
+                    (bitangent + cgmath::Vector3::from(vertices[c[2] as usize].bitangent)).into();
+
+                triangles_included[c[0] as usize] += 1;
+                triangles_included[c[1] as usize] += 1;
+                triangles_included[c[2] as usize] += 1;
+            }
+
+            for (i, n) in triangles_included.into_iter().enumerate() {
+                let denom = 1.0 / n as f32;
+                let mut v = &mut vertices[i];
+                let tangent = cgmath::Vector3::from(v.tangent) * denom;
+                let bitangent = cgmath::Vector3::from(v.bitangent) * denom;
+                let normal = cgmath::Vector3::from(v.normal);
+
+                println!(
+                    "Normal error: \n\t expected: {:?} \n\t got: {:?} \n\t dot product: {:?}",
+                    normal.normalize(),
+                    tangent.cross(bitangent).normalize(),
+                    normal.normalize().dot(tangent.cross(bitangent).normalize())
+                );
+                v.tangent = tangent.into();
+                v.bitangent = bitangent.into();
+                // v.normal = tangent.cross(bitangent).normalize().into();
+            }
 
             let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some(&format!("{:?} Vertex Buffer", file_name)),
