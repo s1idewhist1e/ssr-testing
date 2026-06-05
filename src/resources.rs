@@ -88,7 +88,7 @@ pub async fn load_texture(
                 "Unable to open texture '{}', using fallback texture instead",
                 file_name
             );
-            return Texture::from_image(device, queue, &fallback_texture, Some(file_name));
+            Texture::from_image(device, queue, &fallback_texture, Some(file_name))
         }
     }
 }

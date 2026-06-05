@@ -97,10 +97,10 @@ var s_depth: sampler_comparison;
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let normal_matrix = mat3x3<f32>(
         normalize(in.tangent),
-        normalize(in.bitangent),
+        normalize(-cross(in.tangent, in.world_normal)),
         normalize(in.world_normal),
     );
-    let light_dir = normalize(vec3<f32>(1.0, 1.0, 1.0));
+    //let light_dir = normalize(vec3<f32>(1.0, 1.0, 1.0));
     // let near = 0.1;
     // let far = 100.0;
     // return vec4<f32>(vec3<f32>(textureSampleCompare(t_depth, s_depth, in.tex_coords.xy, 0.0)), 1.0);
@@ -110,15 +110,14 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     //let map_normal = vec3<f32>(0.5,0.5,1.0);
     let tangent_normal = map_normal * vec3<f32>(2,2,2) - vec3<f32>(1,1,1) ; // This may need to be changed even more?
     let world_normal = normal_matrix * tangent_normal;
-    // let world_normal = in.world_normal;
+    //let world_normal = in.world_normal;
 
-    let light = light.position - in.world_pos.xyz;
-    //let light = light.position;
-
-    let half = normalize(light_dir - normalize(in.world_pos.xyz));
+    //let light = light.position - in.world_pos.xyz;
+    let light = light.position;
 
     // let diffuse_color = textureSample(t_diffuse, s_diffuse, in.tex_coords);
-    let diffuse_color = vec4<f32>(0.5, 0.5, 0.5, 1.0);
+    //let diffuse_color = vec4<f32>(0.5, 0.5, 0.5, 1.0);
+    let diffuse_color = vec4<f32>((world_normal+1)/2,1.0);
 
     // let temp_normal = cross(in.tangent, in.bitangent);
 
@@ -138,13 +137,15 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let specular_strength = 0.0;
     let ambient_strength = 0.01;
 
-    let color_lit = min(diffuse_strength + specular_strength + ambient_strength, 1.0) * diffuse_color;
+    //let color_lit = min(diffuse_strength + specular_strength + ambient_strength, 1.0) * diffuse_color;
+    let color_lit = (diffuse_strength + specular_strength + ambient_strength) * diffuse_color;
 
     // let color = // return vec4<f32>(world_normal, 1.0);
-    // return vec4<f32>(in.clip_position.xyw, 1.0);
+    //return vec4<f32>((world_normal+1)/2, 1.0);
     //return color_lit;
+    return vec4<f32>(map_normal, 1.0);
 
-    return vec4<f32>(world_normal, 1.0);
+    //return vec4<f32>(world_normal, 1.0);
     // return c;
 }
 
