@@ -8,7 +8,7 @@ anyhow = "1.0.102"
 bytemuck = "1.25.0"
 cgmath = "0.18.0"
 env_logger = "0.11.10"
-gltf = "1.4.1"
+gltf = { version = "1.4.1", default-feature = true, features = ["utils"]}
 log = "0.4.29"
 pollster = "0.4.0"
 tobj = { version = "3", default-features = false, features = ["async"] }

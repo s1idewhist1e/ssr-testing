@@ -311,72 +311,110 @@ pub async fn load_model(
 
 pub async fn load_model_gltf(
     file_name: &str,
-    device: &wgpu::Device,
-    queue: &wgpu::Queue,
-    layout: &wgpu::BindGroupLayout,
-) -> anyhow::Result<model::Model> {
+    // device: &wgpu::Device,
+    // queue: &wgpu::Queue,
+    // layout: &wgpu::BindGroupLayout,
+) -> anyhow::Result</* model::Model */ ()> {
     let (document, buffers, images) = gltf::import(file_name)?;
 
+    log::debug!(
+        "Document: {:?} \n Buffers: {:?} \n Images: {:?}",
+        document,
+        buffers,
+        images
+    );
+
     // Accessors are ways of sourcing information for meshes, materials, etc
-    let accesors = document.accessors().collect::<Vec<Accessor>>();
 
-    let materials = document
-        .materials()
+    // let materials = document
+    //     .materials()
+    //     .enumerate()
+    //     .map(|(i, mat)| model::Material {
+    //         name: mat
+    //             .name()
+    //             .unwrap_or(&format!("Material {} of {}", i, file_name))
+    //             .into(),
+    //         diffuse_texture: todo!(),
+    //         normal_texture: todo!(),
+    //         bind_group: todo!(),
+    //     });
+    //
+    log::debug!("Num meshes: {}", document.meshes().len());
+    log::debug!("Meshes: {:?}", document.meshes());
+
+    let meshes = document
+        .meshes()
         .enumerate()
-        .map(|(i, mat)| model::Material {
-            name: mat
-                .name()
-                .unwrap_or(&format!("Material {} of {}", i, file_name))
-                .into(),
-            diffuse_texture: todo!(),
-            normal_texture: todo!(),
-            bind_group: todo!(),
-        });
+        .map(|(i, mesh)| {
+            let primitives = mesh.primitives();
 
-    let meshes = document.meshes().enumerate().map(|(i, mesh)| {
-        let primitives = mesh.primitives();
+            let mut positions = vec![];
+            let mut normals = Some(vec![]);
+            let mut tex_coords = Some([vec![], vec![]]);
+            let mut tangents = Some(vec![]);
+            let mut indices = vec![];
 
-        let mut positions= vec![];
+            log::debug!("Mesh {}: {:?}", i, mesh);
 
-        // let primitives = primitives.map(|p| p.clone()).into_iter();
-        for primitive in primitives {
-            let reader = primitive.reader(|buffer| {
-                Some(&buffers[buffer.index()]) // This is telling us how to get a buffer's data from a given buffer object
-            });
-            if let Some(iter) =  reader.read_positions() {
-                positions.push(iter) ;
+            // let primitives = primitives.map(|p| p.clone()).into_iter();
+            for primitive in primitives {
+                let reader = primitive.reader(|buffer| {
+                    Some(&buffers[buffer.index()]) // This is telling us how to get a buffer's data from a given buffer object
+                });
+
+                if let Some(iter) = reader.read_positions() {
+                    positions.extend(iter);
+                }
+
+                match (reader.read_normals(), normals) {
+                    (Some(iter), Some(normals)) => {
+                        normals.extend(iter);
+                    }
+                    (None, _) => {
+                        normals = None;
+                    }
+                    _ => (),
+                }
+                // FIXME: Idk how this is supposed to work
+                if let (Some(texcoords), Some(tex_coords)) = (reader.read_tex_coords(0), tex_coords)
+                {
+                    tex_coords[0].extend(texcoords.into_f32());
+                }
+                if let (Some(texcoords), Some(tex_coords)) = (reader.read_tex_coords(1), tex_coords)
+                {
+                    tex_coords[1].extend(texcoords.into_f32());
+                }
+                if let Some(iter) = reader.read_colors(0) {} // TODO: Implement this
+                if let Some(iter) = reader.read_tangents() {
+                    tangents.extend(iter);
+                }
+                if let Some(iter) = reader.read_indices() {
+                    indices.extend(iter.into_u32());
+                }
             }
-            if let Some(iter) = reader.read_normals() {
-                
+
+            log::debug!("GLTF Positions (len {}): {:?}", positions.len(), positions);
+            log::debug!("GLTF Normals(len {}): {:?}", normals.len(), normals);
+            log::debug!(
+                "GLTF Tex Coords (len {}): {:?}",
+                tex_coords[0].len(),
+                tex_coords
+            );
+            log::debug!("GLTF indices (len {}): {:?}", indices.len(), indices);
+
+            // let vertices = readers.;
+
+            model::Mesh {
+                name: mesh
+                    .name()
+                    .unwrap_or(&format!("Mesh {} of file {}", i, file_name))
+                    .into(),
+                vertex_buffer: todo!(),
+                index_buffer: todo!(),
+                num_elements: todo!(),
+                material: todo!(),
             }
-            // FIXME: Idk how this is supposed to work
-            if let Some(iter) = reader.read_tex_coords(0) {
-
-            }
-            if let Some(iter) = reader.read_colors(set) {
-
-            }
-            if let Some(iter) = reader.read_tangents() {
-
-            }
-            if let Some(iter) = reader.read_indices() {
-
-            }
-        }
-
-        // let vertices = readers.;
-
-        model::Mesh {
-            name: mesh
-                .name()
-                .unwrap_or(&format!("Mesh {} of file {}", i, file_name))
-                .into(),
-            vertex_buffer: todo!(),
-            index_buffer: todo!(),
-            num_elements: todo!(),
-            material: todo!(),
-        }
-    });
-
-    todo!()
+        })
+        .collect::<Vec<_>>();
+    Ok(())
 }

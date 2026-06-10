@@ -65,6 +65,10 @@ pub struct State {
 
 impl State {
     pub async fn new(window: Arc<Window>) -> anyhow::Result<Self> {
+        // XXX: Test
+        let a = resources::load_model_gltf("res/Box.gltf").await?;
+        loop{}
+
         let size = window.inner_size();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
