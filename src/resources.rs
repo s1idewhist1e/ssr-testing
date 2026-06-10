@@ -1,4 +1,7 @@
-use crate::{model::Material, texture::Texture};
+use crate::{
+    model::{Material, ModelVertex, Vertex},
+    texture::Texture,
+};
 
 use std::{
     ffi::OsString,
@@ -7,7 +10,7 @@ use std::{
 };
 
 use cgmath::{InnerSpace, Vector2};
-use gltf::Gltf;
+use gltf::{Accessor, Gltf};
 use wgpu::util::DeviceExt;
 
 use crate::{model, texture};
@@ -306,41 +309,74 @@ pub async fn load_model(
     Ok(model::Model { meshes, materials })
 }
 
-// pub async fn load_model_gltf(
-//     file_name: &str,
-//     device: &wgpu::Device,
-//     queue: &wgpu::Queue,
-//     layout: &wgpu::BindGroupLayout,
-// ) -> anyhow::Result<model::Model> {
-//     let (document, buffers, images) = gltf::import(file_name)?;
-//
-//     let materials = document
-//         .materials()
-//         .enumerate()
-//         .map(|(i, mat)|{
-//
-//             let texture_path =
-//          model::Material {
-//             name: mat
-//                 .name()
-//                 .unwrap_or(&format!("Material {} of {}", i, file_name))
-//                 .into(),
-//         }});
-//     let meshes = document.meshes().enumerate().map(|(i, mesh)| {
-//         let primitives = mesh.primitives();
-//
-//         for primitive in primitives {
-//             let material = primitive.material();
-//             let attributes = primitive.attributes().collect::<Vec<_>>();
-//         }
-//
-//         model::Mesh {
-//             name: mesh
-//                 .name()
-//                 .unwrap_or(&format!("Mesh {} of file {}", i, file_name))
-//                 .into(),
-//         }
-//     });
-//
-//     todo!()
-// }
+pub async fn load_model_gltf(
+    file_name: &str,
+    device: &wgpu::Device,
+    queue: &wgpu::Queue,
+    layout: &wgpu::BindGroupLayout,
+) -> anyhow::Result<model::Model> {
+    let (document, buffers, images) = gltf::import(file_name)?;
+
+    // Accessors are ways of sourcing information for meshes, materials, etc
+    let accesors = document.accessors().collect::<Vec<Accessor>>();
+
+    let materials = document
+        .materials()
+        .enumerate()
+        .map(|(i, mat)| model::Material {
+            name: mat
+                .name()
+                .unwrap_or(&format!("Material {} of {}", i, file_name))
+                .into(),
+            diffuse_texture: todo!(),
+            normal_texture: todo!(),
+            bind_group: todo!(),
+        });
+
+    let meshes = document.meshes().enumerate().map(|(i, mesh)| {
+        let primitives = mesh.primitives();
+
+        let mut positions= vec![];
+
+        // let primitives = primitives.map(|p| p.clone()).into_iter();
+        for primitive in primitives {
+            let reader = primitive.reader(|buffer| {
+                Some(&buffers[buffer.index()]) // This is telling us how to get a buffer's data from a given buffer object
+            });
+            if let Some(iter) =  reader.read_positions() {
+                positions.push(iter) ;
+            }
+            if let Some(iter) = reader.read_normals() {
+                
+            }
+            // FIXME: Idk how this is supposed to work
+            if let Some(iter) = reader.read_tex_coords(0) {
+
+            }
+            if let Some(iter) = reader.read_colors(set) {
+
+            }
+            if let Some(iter) = reader.read_tangents() {
+
+            }
+            if let Some(iter) = reader.read_indices() {
+
+            }
+        }
+
+        // let vertices = readers.;
+
+        model::Mesh {
+            name: mesh
+                .name()
+                .unwrap_or(&format!("Mesh {} of file {}", i, file_name))
+                .into(),
+            vertex_buffer: todo!(),
+            index_buffer: todo!(),
+            num_elements: todo!(),
+            material: todo!(),
+        }
+    });
+
+    todo!()
+}

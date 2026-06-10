@@ -141,11 +141,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let color_lit = (diffuse_strength + specular_strength + ambient_strength) * diffuse_color;
 
     // let color = // return vec4<f32>(world_normal, 1.0);
-    //return vec4<f32>((world_normal+1)/2, 1.0);
-    //return color_lit;
-    return vec4<f32>(map_normal, 1.0);
+    return vec4<f32>((world_normal + 1) / 2, 1.0);
+    //return in.world;
+    //return vec4<f32>(map_normal, 1.0);
 
-    //return vec4<f32>(world_normal, 1.0);
+    //return vec4<f32>(in.world_normal, 1.0);
     // return c;
 }
 

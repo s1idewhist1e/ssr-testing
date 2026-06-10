@@ -5,11 +5,11 @@ mod camera;
 mod instance;
 mod lighting;
 mod model;
+mod render_pipeline;
 mod resources;
 mod state;
 mod texture;
 mod vertex;
-mod render_pipeline;
 
 use app::*;
 
